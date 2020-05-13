@@ -1,8 +1,7 @@
-import numpy as np
 import cvxpy as cp
 import torch.optim as optim 
 import torch
-
+from utils import *
 def solve_cvx(mu_matrix, k, n):
     """ Note you can only use this to solve the original log-concace objective (uniform exploration
     and epsion greedy). This can't be used to solve UCB
@@ -18,7 +17,7 @@ def solve_cvx(mu_matrix, k, n):
     constraints = [cp.sum(p) == 1, p >= 0]
     problem = cp.Problem(objective, constraints)
     result = problem.solve()
-    return p.value
+    return normalize_p(p.value)
 
 def solve_torch(mu_matrix, k, n):
     """ This is using the torch optimizers to solve the problem using SGD. This specific function

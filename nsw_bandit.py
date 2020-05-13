@@ -2,6 +2,7 @@
 import numpy as np
 import cvxpy as cp
 from solvers import *
+from utils import *
 
 class NSW_Bandit:
     def __init__(self, num_arms, num_agents):
@@ -22,9 +23,9 @@ class NSW_Bandit:
 
     def get_opt_p(self, cvx=True):
         if cvx:
-            self.opt_p = solve_cvx(self.mu_matrix, self.k, self.n)
+            self.opt_p = normalize_p(solve_cvx(self.mu_matrix, self.k, self.n))
         else:
-            self.opt_p = solve_torch(self.mu_matrix, self.k, self.n)
+            self.opt_p = normalize_p(solve_torch(self.mu_matrix, self.k, self.n))
         return self.opt_p
 
     def get_nsw(self, p):
@@ -42,15 +43,16 @@ class NSW_Bandit:
             self.opt_nsw = self.get_nsw(self.opt_p)
         return self.opt_nsw
 
-    def get_sample_p(self, p):
+    def get_sample_p(self, p_):
         """ Right now, we are going to do this sample based. That is, we are going to sample an arm
         from distribution p, pull that arm, and return the corresponding welfare vector. 
 
         In it also possible to do a number of simulations over the arm pulls so as to get the
         expected welfare vector
         """
-        assert(np.sum(p)-1 <= 0.001 and len(p)==self.k)
+        assert(np.sum(p_)-1 <= 0.001 and len(p_)==self.k)
         assert(self.mu_matrix is not None)
+        p = normalize_p(p_)
         arm = np.random.choice(self.k, p=p)
         return arm, self.get_sample_arm(arm) 
         
@@ -67,14 +69,10 @@ class NSW_Bandit:
 def unit_test():
     bandit_instance = NSW_Bandit(6, 3)
     bandit_instance.set_default_mu()
-    p_opt = bandit_instance.get_optimal_p(cvx=True)
+    p_opt = bandit_instance.get_opt_p(cvx=True)
     nsw = bandit_instance.get_nsw(p_opt)
     print(p_opt, nsw)
     
-    p_opt = bandit_instance.get_optimal_p(cvx=False)
-    nsw = bandit_instance.get_nsw(p_opt)
-    print(p_opt, nsw)
-
 
 if __name__ == "__main__":
     unit_test()
