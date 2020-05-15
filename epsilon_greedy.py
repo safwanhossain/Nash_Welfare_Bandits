@@ -92,20 +92,27 @@ class epsilon_greedy:
         return self.eps_t, self.explore_ratio, self.mean_regrets, self.std_regrets
                 
 def main():
-    c, T = 0.2, 5000
-    bandit_instance = NSW_Bandit(6, 3)
+    c, T = 0.1, 1000
+    bandit_instance = NSW_Bandit(6, 1)
     eps_greedy = epsilon_greedy(bandit_instance, c, T=T)
     eps_t, explore_ratio, mean_regrets, std_regrets = eps_greedy.run()
-            
+    cumulative_regrets = []
+
     filename = "eps_greedy_sim100_T5000_c02.csv"
     csv_file = open(filename, mode='w')
     csv_writer = csv.writer(csv_file, delimiter=',')
     for t in range(1, T):
+        cumulative_regrets.append(mean_regrets[1:t+1])
         row = [str(t)] + [str(eps_t[t])] + [str(explore_ratio[t])] \
-                + [str(mean_regrets[t])] + [str(std_regrets[t])]
+                + [str(mean_regrets[t])] + [str(np.sum(mean_regrets[1:t+1]))] + [str(std_regrets[t])]
         csv_writer.writerow(row)
         csv_file.flush()
-        
+       
+    #plt.plot(cumulative_regrets)
+    #plt.imsave("cum_regrets")
+    plt.plot(mean_regrets[1:])
+    plt.savefig("mean_regrets")
+    
 if __name__ == "__main__":
     main()
 

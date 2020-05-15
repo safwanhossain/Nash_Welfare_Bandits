@@ -2,6 +2,7 @@ import cvxpy as cp
 import torch.optim as optim 
 import torch
 from utils import *
+
 def solve_cvx(mu_matrix, k, n):
     """ Note you can only use this to solve the original log-concace objective (uniform exploration
     and epsion greedy). This can't be used to solve UCB
