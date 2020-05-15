@@ -15,10 +15,9 @@ class epsilon_greedy:
         self.bandit_instance.set_default_mu()
         self.num_sims = num_sims
         self.T, self.c = T, c
-        self.opt_NSW = self.bandit_instance.get_opt_nsw()
         self.opt_p = self.bandit_instance.get_opt_p()
-        self.cumulative_regret = np.ones(T)*-1
-        self.eps_t = np.ones(T)*-1
+        self.opt_NSW = self.bandit_instance.get_opt_nsw()
+        self.eps_t = np.zeros(T)
         self.n, self.k = bandit_instance.n, bandit_instance.k
         print("Optimal NSW: ", self.opt_NSW)
    
@@ -31,27 +30,29 @@ class epsilon_greedy:
 
     def run_sim(self, tup):
         sim_id, flip, arm, last_p, empirical_rewards, num_samples, k, n = tup
+        regret = None
         if flip == 1:           # explore
             rewards = self.bandit_instance.get_sample_arm(arm)
+            arm_p = np.zeros(self.k)
+            arm_p[arm] = 1
+            nsw = self.bandit_instance.get_nsw(arm_p)
         else:                   # exploit
             arm, rewards = self.bandit_instance.get_sample_p(last_p)
+            nsw = self.bandit_instance.get_nsw(last_p)
+        regret = self.opt_NSW - nsw
         
         empirical_rewards[:,arm] = \
             (empirical_rewards[:,arm]*num_samples[arm] + rewards)/(num_samples[arm]+1)
         num_samples[arm] += 1
-        regret, best_p = None, solve_cvx(empirical_rewards, k, n)
-        if best_p is not None:
-            arm_p = np.zeros(self.k)
-            arm_p[arm] = 1
-            nsw = self.bandit_instance.get_nsw(arm_p)
-            regret = self.opt_NSW - nsw
+        
+        best_p = solve_cvx(empirical_rewards, k, n)
         return sim_id, best_p, regret
 
 
     def run(self):
-        self.mean_regrets = np.ones(self.T)
-        self.std_regrets = np.ones(self.T)
-        self.explore_ratio = np.ones(self.T)
+        self.mean_regrets = np.zeros(self.T)
+        self.std_regrets = np.zeros(self.T)
+        self.explore_ratio = np.zeros(self.T)
 
         for t in tqdm(range(1, self.T)):
             curr_eps_t = self.c * \
@@ -98,7 +99,7 @@ def main():
     eps_t, explore_ratio, mean_regrets, std_regrets = eps_greedy.run()
     cumulative_regrets = []
 
-    filename = "eps_greedy_sim100_T5000_c02.csv"
+    filename = "eps_greedy_sim100_T1000_c01.csv"
     csv_file = open(filename, mode='w')
     csv_writer = csv.writer(csv_file, delimiter=',')
     for t in range(1, T):
