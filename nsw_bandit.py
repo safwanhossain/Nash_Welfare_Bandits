@@ -5,7 +5,7 @@ from solvers import *
 from utils import *
 
 class NSW_Bandit:
-    def __init__(self, num_arms, num_agents):
+    def __init__(self, num_agents, num_arms):
         self.k = num_arms
         self.n = num_agents
         self.mu_matrix = None
@@ -18,7 +18,7 @@ class NSW_Bandit:
         self.mu_matrix = np.random.uniform(size=(self.n, self.k))
 
     def set_mu_matrix(self, mu_matrix):
-        assert(mu_matrix.shape == (n, k))
+        assert(mu_matrix.shape == (self.n, self.k))
         self.mu_matrix = mu_matrix
 
     def get_opt_p(self, cvx=True):

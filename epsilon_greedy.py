@@ -12,7 +12,6 @@ NUM_CORES = 20
 class epsilon_greedy:
     def __init__(self, bandit_instance, c, num_sims=100, T=1000):
         self.bandit_instance = bandit_instance
-        self.bandit_instance.set_default_mu()
         self.num_sims = num_sims
         self.T, self.c = T, c
         self.opt_p = self.bandit_instance.get_opt_p()
@@ -96,13 +95,17 @@ class epsilon_greedy:
         return self.eps_t, self.explore_ratio, self.mean_regrets, self.std_regrets
                 
 def main():
-    c, T = 0.15, 500
-    bandit_instance = NSW_Bandit(6, 1)
-    eps_greedy = epsilon_greedy(bandit_instance, c, T=T, num_sims=20)
+    c, T = 0.20, 5000
+    bandit_instance = NSW_Bandit(3, 5)
+    mu_instance = load_i_instance_nk(3,5,0)
+    bandit_instance.set_mu_matrix(mu_instance)
+    print(mu_instance)
+
+    eps_greedy = epsilon_greedy(bandit_instance, c, T=T, num_sims=100)
     eps_t, explore_ratio, mean_regrets, std_regrets = eps_greedy.run()
     cumulative_regrets = []
 
-    filename = "eps_greedy_sim100_T1000_c01.csv"
+    filename = "eps_greedy_n3_k5_sim100_T5000_c020.csv"
     csv_file = open(filename, mode='w')
     csv_writer = csv.writer(csv_file, delimiter=',')
     for t in range(1, T):
@@ -111,11 +114,6 @@ def main():
                 + [str(mean_regrets[t])] + [str(np.sum(mean_regrets[1:t+1]))] + [str(std_regrets[t])]
         csv_writer.writerow(row)
         csv_file.flush()
-    print(mean_regrets) 
-    #plt.plot(cumulative_regrets)
-    #plt.imsave("cum_regrets")
-    plt.plot(mean_regrets[1:])
-    plt.savefig("mean_regrets")
     
 if __name__ == "__main__":
     main()

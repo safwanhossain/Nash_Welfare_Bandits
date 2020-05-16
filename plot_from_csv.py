@@ -49,11 +49,12 @@ if __name__ == "__main__":
     """ Run this file as "./plot_from_csv <csv_file_name>
     """
     inp_file = sys.argv[1]
+    plot_var = sys.argv[2]
     plt_name = inp_file[:-3] + "png"
     print("Plotting saved to", plt_name)
     t_vals, eps_t, explore_ratio, mean_regrets, cum_regrets, std_regrets = \
             read_from_csv(inp_file)
-    plot(t_vals, mean_regrets, cum_regrets, std_regrets, plt_name)
+    plot(t_vals, mean_regrets, cum_regrets, std_regrets, plt_name, plot_var=plot_var)
     
     fig, ax = plt.subplots()
     ax.plot(t_vals, explore_ratio, label="Exploration")
