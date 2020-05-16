@@ -14,7 +14,7 @@ class epsilon_greedy:
         self.bandit_instance = bandit_instance
         self.num_sims = num_sims
         self.T, self.c = T, c
-        self.opt_p = self.bandit_instance.get_opt_p()
+        self.opt_p = self.bandit_instance.get_opt_p(cvx=True)
         self.opt_NSW = self.bandit_instance.get_opt_nsw()
         self.eps_t = np.zeros(T)
         self.n, self.k = bandit_instance.n, bandit_instance.k
@@ -95,8 +95,8 @@ class epsilon_greedy:
         return self.eps_t, self.explore_ratio, self.mean_regrets, self.std_regrets
                 
 def main():
-    c, num_sims, T = 0.15, 100, 5000
-    n, k = 3, 5
+    c, num_sims, T = 0.20, 100, 500
+    n, k = 1, 5
     bandit_instance = NSW_Bandit(n, k)
     mu_instance = load_i_instance_nk(n,k,0)
     bandit_instance.set_mu_matrix(mu_instance)

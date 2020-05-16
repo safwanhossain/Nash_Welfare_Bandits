@@ -25,6 +25,15 @@ def solve_torch(mu_matrix, k, n):
     is largely for testing, as the original problem can be solved using cvx. However, if this tests
     well, we can possibly use it for UCB
     """
+    def project(x):
+        x = x.detach().numpy()
+        y = cp.Variable(k)
+        objective = cp.Minimize(cp.pnorm(x-y, 2))
+        constraints = [cp.sum(y) == 1, y >= 0]
+        problem = cp.Problem(objective, constraints)
+        result = problem.solve()
+        return normalize_p(y.value)
+
     def get_nsw_prod(_p, _mu_matrix):
         total = 1.0
         for i in range(n):
@@ -35,8 +44,8 @@ def solve_torch(mu_matrix, k, n):
     mu_matrix = torch.from_numpy(mu_matrix).float()
 
     optimizer = optim.Adam([p], lr=0.01)
-    prev, diff, eps = p, 1, 0.001
-    while diff > eps:
+    prev, diff, eps = p, 1, 0.0001
+    for i in range(100):
         prev = p.clone().detach()
         out_val = get_nsw_prod(p, mu_matrix)
         optimizer.zero_grad()
@@ -44,11 +53,11 @@ def solve_torch(mu_matrix, k, n):
         optimizer.step()
         
         with torch.no_grad():
-            for i in range(len(p)):
-                p[i] = p[i].clamp_(0,1)
-            p = p/torch.sum(p)
+            out_p = torch.from_numpy(project(p)).float()
+            if out_p is not None:
+                p = out_p
             p.requires_grad = True
-        diff = torch.sum(torch.pow(p-prev, 2))
+        diff = torch.sum(prev - p) 
     return p.clone().detach().numpy()
 
 

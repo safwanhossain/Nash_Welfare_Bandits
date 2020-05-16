@@ -67,11 +67,13 @@ class NSW_Bandit:
 
 
 def unit_test():
-    bandit_instance = NSW_Bandit(6, 3)
+    bandit_instance = NSW_Bandit(1, 3)
     bandit_instance.set_default_mu()
     p_opt = bandit_instance.get_opt_p(cvx=True)
+    print(p_opt)
+    p_opt = bandit_instance.get_opt_p(cvx=False)
+    print(p_opt)
     nsw = bandit_instance.get_nsw(p_opt)
-    print(p_opt, nsw)
     
 
 if __name__ == "__main__":
