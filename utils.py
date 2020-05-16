@@ -7,6 +7,8 @@ MAX_K = 15
 MAX_INSTANCES = 100
 
 def normalize_p(p):
+    if p is None:
+        return p
     p = np.clip(p, 0, 1)
     p = p / np.sum(p)
     return p

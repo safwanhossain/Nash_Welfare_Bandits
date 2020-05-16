@@ -95,17 +95,19 @@ class epsilon_greedy:
         return self.eps_t, self.explore_ratio, self.mean_regrets, self.std_regrets
                 
 def main():
-    c, T = 0.20, 5000
-    bandit_instance = NSW_Bandit(3, 5)
-    mu_instance = load_i_instance_nk(3,5,0)
+    c, num_sims, T = 0.15, 100, 5000
+    n, k = 3, 5
+    bandit_instance = NSW_Bandit(n, k)
+    mu_instance = load_i_instance_nk(n,k,0)
     bandit_instance.set_mu_matrix(mu_instance)
-    print(mu_instance)
 
-    eps_greedy = epsilon_greedy(bandit_instance, c, T=T, num_sims=100)
+    filename = "eps_greedy_n"+str(n)+"_k"+str(k)+"_sim"+\
+            str(num_sims)+"_T"+str(T)+"_c"+str(c).replace(".", "")+".csv"
+    print("Results wil be saved to: ", filename)
+    eps_greedy = epsilon_greedy(bandit_instance, c, T=T, num_sims=num_sims)
     eps_t, explore_ratio, mean_regrets, std_regrets = eps_greedy.run()
     cumulative_regrets = []
 
-    filename = "eps_greedy_n3_k5_sim100_T5000_c020.csv"
     csv_file = open(filename, mode='w')
     csv_writer = csv.writer(csv_file, delimiter=',')
     for t in range(1, T):
