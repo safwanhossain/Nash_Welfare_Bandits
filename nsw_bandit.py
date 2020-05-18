@@ -45,7 +45,7 @@ class NSW_Bandit:
 
     def get_sample_p(self, p_):
         """ Right now, we are going to do this sample based. That is, we are going to sample an arm
-        from distribution p, pull that arm, and return the corresponding welfare vector. 
+        from distribution p, pull that arm, and return the corresponding welfare vector.
 
         In it also possible to do a number of simulations over the arm pulls so as to get the
         expected welfare vector
@@ -54,10 +54,10 @@ class NSW_Bandit:
         assert(self.mu_matrix is not None)
         p = normalize_p(p_)
         arm = np.random.choice(self.k, p=p)
-        return arm, self.get_sample_arm(arm) 
-        
+        return arm, self.get_sample_arm(arm)
+
     def get_sample_arm(self, arm):
-        """ Given an arm, pull that arm and record the regret 
+        """ Given an arm, pull that arm and record the regret
         """
         mean_reward = self.mu_matrix[:,arm]
         rewards = np.zeros(self.n)
@@ -65,6 +65,11 @@ class NSW_Bandit:
             rewards[i] = np.random.choice(2, p=[1-mean_reward[i], mean_reward[i]])
         return rewards
 
+    def get_sample_all_arms(self):
+        rewards = np.ones((self.n,self.k))
+        for arm in range(self.k):
+            rewards[:,arm] = self.get_sample_arm(arm)
+        return rewards
 
 def unit_test():
     bandit_instance = NSW_Bandit(1, 3)
@@ -74,7 +79,7 @@ def unit_test():
     p_opt = bandit_instance.get_opt_p(cvx=False)
     print(p_opt)
     nsw = bandit_instance.get_nsw(p_opt)
-    
+
 
 if __name__ == "__main__":
     unit_test()
