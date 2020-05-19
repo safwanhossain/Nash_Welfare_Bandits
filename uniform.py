@@ -22,7 +22,6 @@ class Uniform:
         rewards = None
         regret=None
         empirical_rewards = np.ones((self.n,self.k)) * 0.0001
-        print("iddd",sim_id)
         for l in range(1, self.L+1):
             rewards = self.bandit_instance.get_sample_all_arms()
             empirical_rewards = empirical_rewards + rewards
@@ -61,7 +60,6 @@ class Uniform:
         std_regret = np.sqrt(np.var(regrets))
         self.mean_regrets[self.L*self.k:self.T] = mean_regret
         self.std_regrets[self.L*self.k:self.T] = std_regret
-        print( self.mean_regrets)
         print("Final Decision:", mean_regret)
         return self.mean_regrets, self.std_regrets
 
