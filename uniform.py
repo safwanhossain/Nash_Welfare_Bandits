@@ -9,7 +9,7 @@ import sys, csv
 NUM_CORES = 20
 
 class Uniform:
-    def __init__(self, bandit_instance, L,  T=1000, num_sims=100,):
+    def __init__(self, bandit_instance, L,  T=1000, num_sims=100):
         self.bandit_instance = bandit_instance
         self.num_sims = num_sims
         self.T, self.L = T, L
@@ -18,12 +18,12 @@ class Uniform:
         self.n, self.k = bandit_instance.n, bandit_instance.k
         self.best_p = np.ones((self.num_sims, self.k))
 
-    def run_sim(self, tup):
-        sim_id = tup
+    def run_sim(self, sim_id):
         rewards = None
         regret=None
         empirical_rewards = np.ones((self.n,self.k)) * 0.0001
-        for l in tqdm(range(1, self.L+1)):
+        print("iddd",sim_id)
+        for l in range(1, self.L+1):
             rewards = self.bandit_instance.get_sample_all_arms()
             empirical_rewards = empirical_rewards + rewards
         empirical_rewards=empirical_rewards/self.L
@@ -33,8 +33,7 @@ class Uniform:
             regret = self.opt_NSW - nsw
         else:
             print("CVX failed (OPT p not found) on sim ")
-
-        return sim_id,  regret
+        return  regret
 
     def run(self):
         self.mean_regrets = np.zeros(self.T)
@@ -50,30 +49,26 @@ class Uniform:
 
 
         regrets = []
-        parallel_inputs = []
-        for sim in range(self.num_sims):
-            parallel_inputs.append(sim)
-            executor = concurrent.futures.ProcessPoolExecutor(NUM_CORES)
-            futures = [executor.submit(self.run_sim, item) for item in parallel_inputs]
-            concurrent.futures.wait(futures)
+        executor = concurrent.futures.ProcessPoolExecutor(NUM_CORES)
+        futures = [executor.submit(self.run_sim, item) for item in  range(1,self.num_sims+1)]
+        concurrent.futures.wait(futures)
         for future in futures:
             assert(future.done())
             out_tup = future.result()
-            sim_id, regret = out_tup
+            regret = out_tup
             regrets.append(regret)
-        print("Beofre:", self.mean_regrets)
         mean_regret = np.mean(regrets)
         std_regret = np.sqrt(np.var(regrets))
-        for t in tqdm(range(self.L*self.k, self.T)):
-            self.mean_regrets[t] = mean_regret*t
-            self.std_regrets[t] = std_regret*t
-        print("After", self.mean_regrets)
+        self.mean_regrets[self.L*self.k:self.T] = mean_regret
+        self.std_regrets[self.L*self.k:self.T] = std_regret
+        print( self.mean_regrets)
+        print("Final Decision:", mean_regret)
         return self.mean_regrets, self.std_regrets
 
 def main():
 
-    c, num_sims, T = sys.argv[1], sys.argv[2], sys.argv[3]
-    n, k = sys.argv[4], sys.argv[5]
+    c, num_sims, T = float(sys.argv[1]), int(sys.argv[2]), int(sys.argv[3])
+    n, k = int(sys.argv[4]), int(sys.argv[5])
     L= int(np.floor( c*np.power(T*n/k, 2/3)*(np.power(2*np.log(n*T*k), 1/3))))
     print("L;",L)
     bandit_instance = NSW_Bandit(n, k)
