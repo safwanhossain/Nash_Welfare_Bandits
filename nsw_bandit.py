@@ -67,8 +67,10 @@ class NSW_Bandit:
 
 
 def unit_test():
-    bandit_instance = NSW_Bandit(1, 3)
-    bandit_instance.set_default_mu()
+    n, k = 1, 3
+    bandit_instance = NSW_Bandit(n, k)
+    mu_instance = load_i_instance_nk(n,k,0)
+    bandit_instance.set_mu_matrix(mu_instance)
     p_opt = bandit_instance.get_opt_p(cvx=True)
     print(p_opt)
     p_opt = bandit_instance.get_opt_p(cvx=False)
