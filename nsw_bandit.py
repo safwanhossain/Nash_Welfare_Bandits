@@ -72,16 +72,16 @@ class NSW_Bandit:
         return rewards
 
 def unit_test():
-    n, k = 1, 3
+    n, k = 5, 8
     bandit_instance = NSW_Bandit(n, k)
-    mu_instance = load_i_instance_nk(n,k,0)
+    mu_instance = load_i_instance_nk(n,k,1)
     bandit_instance.set_mu_matrix(mu_instance)
-    p_opt = bandit_instance.get_opt_p(cvx=True)
-    print(p_opt)
     p_opt = bandit_instance.get_opt_p(cvx=False)
-    print(p_opt)
+    print("Torch: ", p_opt)
+    p_opt = bandit_instance.get_opt_p(cvx=True)
+    print("Opt:, ", p_opt)
     nsw = bandit_instance.get_nsw(p_opt)
-
+    
 
 if __name__ == "__main__":
     unit_test()

@@ -43,7 +43,7 @@ class epsilon_greedy:
         regret = self.opt_NSW - nsw
         empirical_rewards[:,arm] = \
             (empirical_rewards[:,arm]*num_samples[arm] + rewards)/(num_samples[arm]+1)
-        best_p = solve_cvx(empirical_rewards, k, n)
+        best_p = solve_torch(empirical_rewards, k, n)
         return sim_id, arm, rewards, best_p, regret
 
 
@@ -95,8 +95,8 @@ class epsilon_greedy:
         return self.eps_t, self.explore_ratio, self.mean_regrets, self.std_regrets
                 
 def main():
-    c, num_sims, T = 0.20, 100, 500
-    n, k = 1, 5
+    c, num_sims, T = 0.20, 1, 5000
+    n, k = 3, 5 
     bandit_instance = NSW_Bandit(n, k)
     mu_instance = load_i_instance_nk(n,k,0)
     bandit_instance.set_mu_matrix(mu_instance)
