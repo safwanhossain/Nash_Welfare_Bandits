@@ -9,13 +9,16 @@ import sys, csv
 NUM_CORES = 20
 
 class Uniform:
-    def __init__(self, bandit_instance, L,  T=1000, num_sims=100):
+    def __init__(self, bandit_instance, c, T=1000, num_sims=100):
         self.bandit_instance = bandit_instance
         self.num_sims = num_sims
-        self.T, self.L = T, L
+        self.c = c
+        self.T = T
+        self.n, self.k = bandit_instance.n, bandit_instance.k
+        self.L= int(np.floor( self.c*np.power(self.T*self.n/self.k, 2/3)*\
+                (np.power(2*np.log(self.n*self.T*self.k), 1/3))))
         self.opt_p = self.bandit_instance.get_opt_p(cvx=True)
         self.opt_NSW = self.bandit_instance.get_opt_nsw()
-        self.n, self.k = bandit_instance.n, bandit_instance.k
         self.best_p = np.ones((self.num_sims, self.k))
 
     def run_sim(self, sim_id):
@@ -60,14 +63,11 @@ class Uniform:
         std_regret = np.sqrt(np.var(regrets))
         self.mean_regrets[self.L*self.k:self.T] = mean_regret
         self.std_regrets[self.L*self.k:self.T] = std_regret
-        print("Final Decision:", mean_regret)
         return self.mean_regrets, self.std_regrets
 
 def main():
-
     c, num_sims, T = float(sys.argv[1]), int(sys.argv[2]), int(sys.argv[3])
     n, k = int(sys.argv[4]), int(sys.argv[5])
-    L= int(np.floor( c*np.power(T*n/k, 2/3)*(np.power(2*np.log(n*T*k), 1/3))))
     print("L;",L)
     bandit_instance = NSW_Bandit(n, k)
     mu_instance = load_i_instance_nk(n,k,0)
