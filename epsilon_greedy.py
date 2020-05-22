@@ -95,7 +95,7 @@ class epsilon_greedy:
         return self.eps_t, self.explore_ratio, self.mean_regrets, self.std_regrets
                 
 def main():
-    c, num_sims, T = 0.20, 1, 5000
+    c, num_sims, T = 0.20, 20, 5000
     n, k = 3, 5 
     bandit_instance = NSW_Bandit(n, k)
     mu_instance = load_i_instance_nk(n,k,0)

@@ -81,7 +81,6 @@ def unit_test():
     p_opt = bandit_instance.get_opt_p(cvx=True)
     print("Opt:, ", p_opt)
     nsw = bandit_instance.get_nsw(p_opt)
-    
 
 if __name__ == "__main__":
     unit_test()

@@ -21,39 +21,85 @@ def solve_cvx(mu_matrix, k, n):
     result = problem.solve()
     return normalize_p(p.value)
 
-def solve_torch(mu_matrix, k, n):
+def solve_torch_ucb(mu_matrix, num_samples, k, n,t):
     """ This is using the torch optimizers to solve the problem using SGD. This specific function
     is largely for testing, as the original problem can be solved using cvx. However, if this tests
     well, we can possibly use it for UCB
     """
-    def get_nsw_prod(_p, _mu_matrix):
+    def get_nsw_prod(_p, _mu_matrix,_num_samples,_n,_t):
+        #_num_samples=torch.ones(k)
+        #t=_t.float()
+        nsw = torch.tensor([0]).float()
+        radius = torch.tensor([0]).float()
         total = torch.tensor([0]).float()
         for i in range(n):
-            total += torch.log(torch.matmul(_p, _mu_matrix[i,:]))
+            nsw+=torch.matmul(_p, _mu_matrix[i,:])
+        radius = _n*torch.sqrt(torch.tensor([_t*1.0]).float())*torch.matmul(_p, 1/torch.sqrt(_num_samples ))
+        total=torch.log(nsw+radius)
         return -1*total
 
-    #p = torch.array([0.33, 0.33, 0.33], requires_grad=True)
     p = torch.rand(k, requires_grad=True)
     mu_matrix = torch.from_numpy(mu_matrix).float()
+    num_samples=torch.from_numpy(num_samples).float()
     prev = 2*torch.ones(k)
     i, eps = 0, 1e-8
 
     while torch.sum(torch.pow(prev-p,2)) > eps and i < 2000:
         prev = p.clone().detach()
         optimizer = optim.SGD([p], lr=0.005)
-        out_val = get_nsw_prod(p, mu_matrix)
+        out_val = get_nsw_prod(p, mu_matrix,num_samples,n,t)
         optimizer.zero_grad()
         out_val.backward()
         optimizer.step()
-        
         with torch.no_grad():
             out_p = torch.from_numpy(project_fast(p.detach().numpy(), k)).float()
             if out_p is not None:
                 p = out_p
         p.requires_grad = True
         i += 1
+
+    return p.detach().numpy()
+
+def solve_torch(mu_matrix, k, n):
+    """ This is using the torch optimizers to solve the problem using SGD. This specific function
+    is largely for testing, as the original problem can be solved using cvx. However, if this tests
+    well, we can possibly use it for UCB
+    """
+    def get_nsw_prod(_p, _mu_matrix):
+        total = 0
+        for i in range(n):
+            out = torch.matmul(_p, _mu_matrix[i,:])
+            if out == 0:
+                out = out + 0.001
+            total += torch.log(out)
+        return -1*total
+
+    p = torch.rand(k, requires_grad=True)
+    mu_matrix = torch.from_numpy(mu_matrix).float()
+    prev = 2*torch.ones(k)
+    i, eps = 0, 1e-8
+
+    while torch.sum(torch.pow(prev-p,2)) > eps and i < 2000:
+        optimizer = optim.SGD([p], lr=0.005)
+        prev = p.clone().detach()
+        out_val = get_nsw_prod(p, mu_matrix)
+        optimizer.zero_grad()
+        out_val.backward()
+        optimizer.step()
+        
+        out_p = project_fast(p.detach().numpy(), k)
+        if out_p is None:
+            print("Error")
+            print("prev: ", prev)
+            print("Outval: ", out_val)
+            print("P: ", p)
+            print("i: ", i)
+        if out_p is not None:
+            p = torch.from_numpy(out_p).float()
+        p.requires_grad = True
+        i += 1
     
-    #print("Finished at: ", i)
+    #print("Finished at: ", i, "with p:", p)
     return p.detach().numpy()
 
 def project(x, k):
@@ -61,13 +107,15 @@ def project(x, k):
     objective = cp.Minimize(cp.pnorm(x-y, 2))
     constraints = [cp.sum(y) == 1, y >= 0]
     problem = cp.Problem(objective, constraints)
-    result = problem.solve()
+    try:
+        result = problem.solve(verbose=False)
+    except:
+        print(x)
     return normalize_p(y.value)
 
 def project_fast(p, k):
     p_sorted = np.sort(p)[::-1]
     satisfied_j = []
-    print("Sorted: ", p_sorted)
     for j, p_s in enumerate(p_sorted):
         curr_sum = 0
         for r in range(j+1):
@@ -75,49 +123,20 @@ def project_fast(p, k):
         result = p_s - (1/(j+1))*(curr_sum - 1)
         if result > 0:
             satisfied_j.append(j+1)
-    print("Satisfied: ", satisfied_j)    
-    rho = max(satisfied_j)
+    try:
+        rho = max(satisfied_j)
+    except:
+        print("EXCEPTION")
+        return None
+
     curr_sum = 0
     for i in range(rho):
         curr_sum += p_sorted[i]
-    theta = (1/(rho+1))*(curr_sum - 1)
-    print("Rho: ", rho)
-    print("Theta: ", theta)
-    out_p = p.copy()
+    theta = (1/(rho))*(curr_sum - 1)
+    out_p = np.ones(len(p))
     for i in range(len(p)):
         out_p[i] = max(p[i] - theta, 0)
-    print(out_p)
     return out_p
-
-
-def simple_solver():
-    def get_loss(p):
-        return p[0]**2 + p[1]**2
-
-    p = torch.tensor([0.5, 0.2], requires_grad=True)
-    for i in range(1000):
-        p.requires_grad = True
-        optimizer = optim.Adam([p], lr=0.001)
-        out_val = get_loss(p)
-        optimizer.zero_grad()
-        out_val.backward()
-        optimizer.step()
-        print("P before:", p)
-            
-        #with torch.no_grad():
-        #    p = torch.clamp(p, 0, 1)
-        #p.requires_grad= True
-        
-        #if i % 100 == 0:
-        #    print("Here")
-        #    with torch.no_grad():
-        #        out_p = torch.from_numpy(project(p)).float()
-        #        if out_p is not None:
-        #            p = out_p
-        print("P after: ", p)
-    out = project(p) 
-    print(out)
-
 
 if __name__ == "__main__":
     #simple_solver()
