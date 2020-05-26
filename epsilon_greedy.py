@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import concurrent.futures 
 import sys, csv
 
-NUM_CORES = 20
+NUM_CORES = 25
 
 class epsilon_greedy:
     def __init__(self, bandit_instance, c, num_sims=100, T=1000):
@@ -95,27 +95,28 @@ class epsilon_greedy:
         return self.eps_t, self.explore_ratio, self.mean_regrets, self.std_regrets
                 
 def main():
-    c, num_sims, T = 0.20, 20, 5000
-    n, k = 2, 2 
-    bandit_instance = NSW_Bandit(n, k)
-    mu_instance = load_i_instance_nk(n,k,0)
-    bandit_instance.set_mu_matrix(mu_instance)
+    for i in range(10):
+        c, num_sims, T = 0.1, 50, 4000
+        n, k = 3, 5 
+        bandit_instance = NSW_Bandit(n, k)
+        mu_instance = load_i_instance_nk(n,k,i)
+        bandit_instance.set_mu_matrix(mu_instance)
 
-    filename = "eps_greedy_n"+str(n)+"_k"+str(k)+"_sim"+\
-            str(num_sims)+"_T"+str(T)+"_c"+str(c).replace(".", "")+".csv"
-    print("Results wil be saved to: ", filename)
-    eps_greedy = epsilon_greedy(bandit_instance, c, T=T, num_sims=num_sims)
-    eps_t, explore_ratio, mean_regrets, std_regrets = eps_greedy.run()
-    cumulative_regrets = []
+        filename = "eps_greedy_n"+str(n)+"_k"+str(k)+"_instance"+str(i)+"_sim"+\
+                str(num_sims)+"_T"+str(T)+"_c"+str(c).replace(".", "")+".csv"
+        print("Results wil be saved to: ", filename)
+        eps_greedy = epsilon_greedy(bandit_instance, c, T=T, num_sims=num_sims)
+        eps_t, explore_ratio, mean_regrets, std_regrets = eps_greedy.run()
+        cumulative_regrets = []
 
-    csv_file = open(filename, mode='w')
-    csv_writer = csv.writer(csv_file, delimiter=',')
-    for t in range(1, T):
-        cumulative_regrets.append(mean_regrets[1:t+1])
-        row = [str(t)] + [str(eps_t[t])] + [str(explore_ratio[t])] \
-                + [str(mean_regrets[t])] + [str(np.sum(mean_regrets[1:t+1]))] + [str(std_regrets[t])]
-        csv_writer.writerow(row)
-        csv_file.flush()
+        csv_file = open(filename, mode='w')
+        csv_writer = csv.writer(csv_file, delimiter=',')
+        for t in range(1, T):
+            cumulative_regrets.append(mean_regrets[1:t+1])
+            row = [str(t)] + [str(eps_t[t])] + [str(explore_ratio[t])] \
+                    + [str(mean_regrets[t])] + [str(np.sum(mean_regrets[1:t+1]))] + [str(std_regrets[t])]
+            csv_writer.writerow(row)
+            csv_file.flush()
     
 if __name__ == "__main__":
     main()

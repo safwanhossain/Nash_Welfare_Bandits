@@ -4,7 +4,7 @@ import sys
 import matplotlib.pyplot as plt
 import numpy as np
 
-def read_from_csv(filename):
+def read_from_csv_eps_greedy(filename):
     """ Indicies must be 4 elements """
     t_vals, eps_t, explore_ratio, mean_regrets, cum_regrets, std_regrets= [], [], [], [], [], []
     csv_file = open(filename, mode='r')
@@ -21,6 +21,22 @@ def read_from_csv(filename):
     
     return np.array(t_vals), np.array(eps_t), np.array(explore_ratio), \
             np.array(mean_regrets), np.array(cum_regrets), np.array(std_regrets)
+
+def read_from_csv_UCB(filename):
+    """ Indicies must be 4 elements """
+    t_vals, mean_regrets, cum_regrets, std_regrets= [], [], [], []
+    csv_file = open(filename, mode='r')
+    csv_reader = csv.reader(csv_file, delimiter=",")
+        
+    for row in csv_reader:
+        scale = 1.5
+        t_vals.append(float(row[0]))
+        mean_regrets.append(float(row[1]))
+        cum_regrets.append(float(row[2]))
+        std_regrets.append(float(row[3]))
+    
+    return np.array(t_vals), np.array(mean_regrets), \
+            np.array(cum_regrets), np.array(std_regrets)
 
 def plot(t_vals, mean_regrets, cum_regrets, std_regrets, plt_name, plot_var=False):
     fig, ax1 = plt.subplots()
@@ -48,21 +64,27 @@ def plot(t_vals, mean_regrets, cum_regrets, std_regrets, plt_name, plot_var=Fals
 if __name__ == "__main__":
     """ Run this file as "./plot_from_csv <csv_file_name>
     """
-    inp_file = sys.argv[1]
-    plot_var = sys.argv[2]
+    algo = sys.argv[1]
+    assert algo in ["UCB", "EPS_GREEDY"]
+    inp_file = sys.argv[2]
+    plot_var = sys.argv[3]
     plt_name = inp_file[:-3] + "png"
     print("Plotting saved to", plt_name)
-    t_vals, eps_t, explore_ratio, mean_regrets, cum_regrets, std_regrets = \
-            read_from_csv(inp_file)
-    plot(t_vals, mean_regrets, cum_regrets, std_regrets, plt_name, plot_var=plot_var)
     
-    fig, ax = plt.subplots()
-    ax.plot(t_vals, explore_ratio, label="Exploration")
-    ax.set_ylabel("Explore Ratio")
-    plt.legend()
-    plt.grid(False)
-    plt.tight_layout()
-    explore_name = plt_name[:-4]+"_explore.png"
-    print("Plotting saved to", explore_name)
-    plt.savefig(explore_name)
+    
+    if algo == "EPS_GREEDY": 
+        t_vals, eps_t, explore_ratio, mean_regrets, cum_regrets, std_regrets = \
+                read_from_csv_eps_greedy(inp_file)
+    if algo == "UCB":
+        t_vals, mean_regrets, cum_regrets, std_regrets = \
+                read_from_csv_UCB(inp_file)
+    plot(t_vals, mean_regrets, cum_regrets, std_regrets, plt_name, plot_var=plot_var)
 
+
+
+
+
+
+
+
+    
