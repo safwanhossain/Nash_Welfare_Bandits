@@ -95,9 +95,9 @@ class epsilon_greedy:
         return self.eps_t, self.explore_ratio, self.mean_regrets, self.std_regrets
                 
 def main():
-    for i in range(10):
+    for i in range(1):
         c, num_sims, T = 0.1, 50, 4000
-        n, k = 3, 5 
+        n, k = 4, 8 
         bandit_instance = NSW_Bandit(n, k)
         mu_instance = load_i_instance_nk(n,k,i)
         bandit_instance.set_mu_matrix(mu_instance)
